@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include "budget.h"
 
@@ -14,9 +13,9 @@ int main() {
     data.weeklyAllowance =
         readPositiveAmount("Enter your weekly allowance: PHP ");
 
-    bool running = true;
+    int choice;
 
-    while (running) {
+    do {
         cout << "\n====================================\n";
         cout << "   ILOILO STUDENT BUDGET TRACKER\n";
         cout << "====================================\n";
@@ -30,7 +29,7 @@ int main() {
         cout << "8. Exit\n";
         cout << "====================================\n";
 
-        int choice = readInteger("Enter your choice: ");
+        choice = readInteger("Enter your choice: ");
 
         switch (choice) {
             case 1:
@@ -64,13 +63,12 @@ int main() {
             case 8:
                 cout << "\nThank you for using the "
                      << "Iloilo Student Budget Tracker.\n";
-                running = false;
                 break;
 
             default:
                 cout << "Invalid choice. Please try again.\n";
         }
-    }
+    } while (choice != 8);
 
     return 0;
 }
