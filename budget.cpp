@@ -1,209 +1,208 @@
-
 #include <iostream>
 #include <iomanip>
-#include <sstream>
 #include <string>
 #include "budget.h"
 
 using namespace std;
 
 int readInteger(const string& prompt) {
-    string input;
     int value;
-    char extra;
 
     cout << prompt;
-    getline(cin, input);
-
-    stringstream ss(input);
-
-    if (!(ss >> value) || (ss >> extra)) {
+    if (cin >> value) {
+        cin.ignore(10000, '\n');
+        return value;
+    } else {
+        cout << "Invalid input. Please enter a whole number.\n";
+        cin.clear();
+        cin.ignore(10000, '\n');
         return -1;
     }
-
-    return value;
 }
 
 double readPositiveAmount(const string& prompt) {
-    string input;
     double amount;
-    char extra;
 
     while (true) {
         cout << prompt;
-        getline(cin, input);
-
-        stringstream ss(input);
-
-        if ((ss >> amount) && !(ss >> extra) && amount > 0) {
-            return amount;
+        if (cin >> amount) {
+            cin.ignore(10000, '\n');
+            if (amount > 0) {
+                return amount;
+            } else {
+                cout << "Invalid amount. Enter a number greater than 0.\n";
+            }
+        } else {
+            cout << "Invalid amount. Enter a number greater than 0.\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
         }
-
-        cout << "Invalid amount. Enter a number greater than 0.\n";
     }
 }
 
-static string readDescription(const string& prompt) {
+string readDescription(const string& prompt) {
     string description;
 
-    while (true) {
+    do {
         cout << prompt;
         getline(cin, description);
-
-        if (description.find_first_not_of(" \t") != string::npos) {
-            return description;
+        if (description.empty()) {
+            cout << "Description cannot be empty.\n";
         }
+    } while (description.empty());
 
-        cout << "Description cannot be empty.\n";
-    }
+    return description;
 }
 
-static void addExpense(BudgetData& data,
-                       const string& description,
-                       double amount) {
-    if (data.expenseCount >= MAX_EXPENSES) {
+void addExpense(string descriptions[], double amounts[], int& expenseCount,
+                const string& description, double amount) {
+    if (expenseCount >= MAX_EXPENSES) {
         cout << "Expense limit reached.\n";
-        return;
+    } else {
+        descriptions[expenseCount] = description;
+        amounts[expenseCount] = amount;
+        expenseCount++;
+        cout << "Expense added successfully.\n";
     }
-
-    data.expenses[data.expenseCount].description = description;
-    data.expenses[data.expenseCount].amount = amount;
-    data.expenseCount++;
-
-    cout << "Expense added successfully.\n";
 }
 
-static bool validRecord(const BudgetData& data, int number) {
-    return number >= 1 && number <= data.expenseCount;
+bool validRecordNumber(int number, int expenseCount) {
+    if (number >= 1 && number <= expenseCount) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
-void setAllowance(const BudgetData& data) {
+void displayAllowance(double weeklyAllowance) {
     cout << fixed << setprecision(2);
-    cout << "Weekly allowance is already set at PHP "
-         << data.weeklyAllowance << ".\n";
+    cout << "Your weekly allowance is PHP " << weeklyAllowance << ".\n";
 }
 
-void quickExpense(BudgetData& data) {
-    cout << "\n--- QUICK EXPENSE ---\n";
-    cout << "1. Jeepney Fare - PHP 15\n";
-    cout << "2. Batchoy - PHP 80\n";
-    cout << "3. Printing - PHP 5\n";
+void quickExpense(string descriptions[], double amounts[], int& expenseCount) {
+    int choice;
+    string description;
+    double amount = 0;
 
-    int choice = readInteger("Choose an expense: ");
+    do {
+        cout << "\n--- QUICK EXPENSE ---\n";
+        cout << "1. Jeepney Fare - PHP 15\n";
+        cout << "2. Batchoy - PHP 80\n";
+        cout << "3. Printing - PHP 5\n";
+        cout << "4. Return to Main Menu\n";
 
-    switch (choice) {
-        case 1:
-            addExpense(data, "Jeepney Fare", 15);
-            break;
+        choice = readInteger("Choose an expense: ");
 
-        case 2:
-            addExpense(data, "Batchoy", 80);
-            break;
+        switch (choice) {
+            case 1:
+                description = "Jeepney Fare";
+                amount = 15;
+                addExpense(descriptions, amounts, expenseCount, description, amount);
+                break;
+            case 2:
+                description = "Batchoy";
+                amount = 80;
+                addExpense(descriptions, amounts, expenseCount, description, amount);
+                break;
+            case 3:
+                description = "Printing";
+                amount = 5;
+                addExpense(descriptions, amounts, expenseCount, description, amount);
+                break;
+            case 4:
+                cout << "Returning to main menu.\n";
+                break;
+            default:
+                cout << "Invalid choice. Please try again.\n";
+                break;
+        }
+    } while (choice < 1 || choice > 4);
+}
 
-        case 3:
-            addExpense(data, "Printing", 5);
-            break;
-
-        default:
-            cout << "Invalid choice. Please try again.\n";
+void customExpense(string descriptions[], double amounts[], int& expenseCount) {
+    if (expenseCount >= MAX_EXPENSES) {
+        cout << "Expense limit reached.\n";
+    } else {
+        cout << "\n--- CUSTOM EXPENSE ---\n";
+        string description = readDescription("Enter expense description: ");
+        double amount = readPositiveAmount("Enter expense amount: PHP ");
+        addExpense(descriptions, amounts, expenseCount, description, amount);
     }
 }
 
-void customExpense(BudgetData& data) {
-    cout << "\n--- CUSTOM EXPENSE ---\n";
-
-    string description = readDescription("Enter expense description: ");
-    double amount = readPositiveAmount("Enter expense amount: PHP ");
-
-    addExpense(data, description, amount);
-}
-
-void viewExpenses(const BudgetData& data) {
+void viewExpenses(const string descriptions[], const double amounts[], int expenseCount) {
     cout << "\n--- RECORDED EXPENSES ---\n";
 
-    if (data.expenseCount == 0) {
+    if (expenseCount == 0) {
         cout << "No expenses recorded.\n";
-        return;
-    }
-
-    cout << fixed << setprecision(2);
-
-    for (int i = 0; i < data.expenseCount; i++) {
-        cout << i + 1 << ". "
-             << data.expenses[i].description
-             << " - PHP "
-             << data.expenses[i].amount << "\n";
+    } else {
+        cout << fixed << setprecision(2);
+        for (int i = 0; i < expenseCount; i++) {
+            cout << i + 1 << ". " << descriptions[i]
+                 << " - PHP " << amounts[i] << "\n";
+        }
     }
 }
 
-void updateExpense(BudgetData& data) {
+void updateExpense(string descriptions[], double amounts[], int expenseCount) {
     cout << "\n--- UPDATE EXPENSE ---\n";
-    viewExpenses(data);
 
-    if (data.expenseCount == 0) {
-        return;
+    if (expenseCount == 0) {
+        cout << "No expenses recorded.\n";
+    } else {
+        viewExpenses(descriptions, amounts, expenseCount);
+        int number = readInteger("Enter record number to update: ");
+
+        if (validRecordNumber(number, expenseCount)) {
+            descriptions[number - 1] = readDescription("Enter new description: ");
+            amounts[number - 1] = readPositiveAmount("Enter new amount: PHP ");
+            cout << "Expense updated successfully.\n";
+        } else {
+            cout << "Invalid record number. Please try again.\n";
+        }
     }
-
-    int number = readInteger("Enter record number to update: ");
-
-    if (!validRecord(data, number)) {
-        cout << "Invalid record number. Please try again.\n";
-        return;
-    }
-
-    string description = readDescription("Enter new description: ");
-    double amount = readPositiveAmount("Enter new amount: PHP ");
-
-    data.expenses[number - 1].description = description;
-    data.expenses[number - 1].amount = amount;
-
-    cout << "Expense updated successfully.\n";
 }
 
-void deleteExpense(BudgetData& data) {
+void deleteExpense(string descriptions[], double amounts[], int& expenseCount) {
     cout << "\n--- DELETE EXPENSE ---\n";
-    viewExpenses(data);
 
-    if (data.expenseCount == 0) {
-        return;
+    if (expenseCount == 0) {
+        cout << "No expenses recorded.\n";
+    } else {
+        viewExpenses(descriptions, amounts, expenseCount);
+        int number = readInteger("Enter record number to delete: ");
+
+        if (validRecordNumber(number, expenseCount)) {
+            for (int i = number - 1; i < expenseCount - 1; i++) {
+                descriptions[i] = descriptions[i + 1];
+                amounts[i] = amounts[i + 1];
+            }
+            expenseCount--;
+            cout << "Expense deleted successfully.\n";
+        } else {
+            cout << "Invalid record number. Please try again.\n";
+        }
     }
-
-    int number = readInteger("Enter record number to delete: ");
-
-    if (!validRecord(data, number)) {
-        cout << "Invalid record number. Please try again.\n";
-        return;
-    }
-
-    for (int i = number - 1; i < data.expenseCount - 1; i++) {
-        data.expenses[i] = data.expenses[i + 1];
-    }
-
-    data.expenseCount--;
-
-    cout << "Expense deleted successfully.\n";
 }
 
-void budgetSummary(BudgetData& data) {
-    data.totalExpenses = 0;
+void budgetSummary(double weeklyAllowance, const double amounts[], int expenseCount) {
+    double totalExpenses = 0;
 
-    for (int i = 0; i < data.expenseCount; i++) {
-        data.totalExpenses += data.expenses[i].amount;
+    for (int i = 0; i < expenseCount; i++) {
+        totalExpenses = totalExpenses + amounts[i];
     }
 
-    double remainingAllowance =
-        data.weeklyAllowance - data.totalExpenses;
+    double remainingAllowance = weeklyAllowance - totalExpenses;
 
     cout << fixed << setprecision(2);
     cout << "\n--- BUDGET SUMMARY ---\n";
-    cout << "Weekly allowance: PHP "
-         << data.weeklyAllowance << "\n";
-    cout << "Total expenses: PHP "
-         << data.totalExpenses << "\n";
-    cout << "Remaining allowance: PHP "
-         << remainingAllowance << "\n";
+    cout << "Weekly allowance: PHP " << weeklyAllowance << "\n";
+    cout << "Total expenses: PHP " << totalExpenses << "\n";
+    cout << "Remaining allowance: PHP " << remainingAllowance << "\n";
 
     if (remainingAllowance <= 100) {
         cout << "Warning: Your remaining allowance is low!\n";
+    } else {
+        cout << "Your remaining allowance is above PHP 100.\n";
     }
 }

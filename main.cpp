@@ -4,22 +4,23 @@
 using namespace std;
 
 int main() {
-    BudgetData data{};
+    string descriptions[MAX_EXPENSES];
+    double amounts[MAX_EXPENSES] = {0};
+    int expenseCount = 0;
+    double weeklyAllowance;
+    int choice;
 
     cout << "====================================\n";
     cout << "   ILOILO STUDENT BUDGET TRACKER\n";
     cout << "====================================\n";
 
-    data.weeklyAllowance =
-        readPositiveAmount("Enter your weekly allowance: PHP ");
-
-    int choice;
+    weeklyAllowance = readPositiveAmount("Enter your weekly allowance: PHP ");
 
     do {
         cout << "\n====================================\n";
         cout << "   ILOILO STUDENT BUDGET TRACKER\n";
         cout << "====================================\n";
-        cout << "1. Set Allowance\n";
+        cout << "1. Display Allowance\n";
         cout << "2. Quick Expense\n";
         cout << "3. Custom Expense\n";
         cout << "4. View Expenses\n";
@@ -33,40 +34,32 @@ int main() {
 
         switch (choice) {
             case 1:
-                setAllowance(data);
+                displayAllowance(weeklyAllowance);
                 break;
-
             case 2:
-                quickExpense(data);
+                quickExpense(descriptions, amounts, expenseCount);
                 break;
-
             case 3:
-                customExpense(data);
+                customExpense(descriptions, amounts, expenseCount);
                 break;
-
             case 4:
-                viewExpenses(data);
+                viewExpenses(descriptions, amounts, expenseCount);
                 break;
-
             case 5:
-                updateExpense(data);
+                updateExpense(descriptions, amounts, expenseCount);
                 break;
-
             case 6:
-                deleteExpense(data);
+                deleteExpense(descriptions, amounts, expenseCount);
                 break;
-
             case 7:
-                budgetSummary(data);
+                budgetSummary(weeklyAllowance, amounts, expenseCount);
                 break;
-
             case 8:
-                cout << "\nThank you for using the "
-                     << "Iloilo Student Budget Tracker.\n";
+                cout << "\nThank you for using the Iloilo Student Budget Tracker.\n";
                 break;
-
             default:
                 cout << "Invalid choice. Please try again.\n";
+                break;
         }
     } while (choice != 8);
 
